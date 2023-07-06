@@ -1,0 +1,58 @@
+name: python-cmake-builder
+
+on:
+  workflow_dispatch:
+    inputs:
+      os:
+        type: choice
+        description: Please select the operating system
+        default: macos-latest
+        required: true
+        options: 
+          - macos-latest
+          - windows-latest
+          - ubuntu-latest
+      py_version:
+        type: choice
+        description: Please select a python version
+        default: '3.9.17'
+        required: true
+        options:
+          - '3.7.17'
+          - '3.8.17'
+          - '3.9.17'
+
+jobs:
+  build:
+    name: test-python-${{ github.event.inputs.py_version }}-${{ github.event.inputs.os }}
+    runs-on: ${{ github.event.inputs.os }}
+    env:
+      SRC_DIR: $GITHUB_WORKSPACE/src
+      BUILD_DIR: $GITHUB_WORKSPACE/build
+      INSTALL_DIR: $GITHUB_WORKSPACE/install
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+          path: src
+
+      - name: Setup ninja
+        uses: ashutoshvarma/setup-ninja@master
+        with:
+          version: 1.10.0
+
+      - name: configure and generate
+        run: >
+          cmake -S ${{env.SRC_DIR}} -B ${{env.BUILD_DIR}}
+          -DPYTHON_VERSION="${{ github.event.inputs.py_version }}"
+          -DCMAKE_INSTALL_PREFIX:PATH=${{env.INSTALL_DIR}}
+          -DBUILD_LIBPYTHON_SHARED:BOOL=YES -GNinja
+
+      - name: build
+        run: cmake --build ${{env.BUILD_DIR}}
+
+      - name: install
+        run: cmake --install ${{env.BUILD_DIR}}
+
+      - name: test
+        run: ${{env.INSTALL_DIR}}/bin/python -m test
