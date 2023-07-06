@@ -1,0 +1,60 @@
+name: matrix-test
+
+on:
+  workflow_dispatch:
+    inputs:
+      py_version:
+        type: choice
+        description: Please select a python version
+        default: '3.9.17'
+        required: true
+        options:
+          - '3.7.17'
+          - '3.8.17'
+          - '3.9.17'
+jobs:
+  build:
+    name: test-python-${{ github.event.inputs.py_version }}-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        include:
+          - os: ubuntu-latest
+            SRC_DIR: $GITHUB_WORKSPACE/src
+            BUILD_DIR: $GITHUB_WORKSPACE/build
+            INSTALL_DIR: $GITHUB_WORKSPACE/install
+          - os: windows-latest
+            SRC_DIR: $GITHUB_WORKSPACE\src
+            BUILD_DIR: $GITHUB_WORKSPACE\build
+            INSTALL_DIR: $GITHUB_WORKSPACE\install
+          - os: macOS-latest
+            SRC_DIR: $GITHUB_WORKSPACE/src
+            BUILD_DIR: $GITHUB_WORKSPACE/build
+            INSTALL_DIR: $GITHUB_WORKSPACE/install
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+          path: src
+
+      - name: Setup ninja
+        uses: ashutoshvarma/setup-ninja@master
+        with:
+          version: 1.10.0
+
+      - name: configure and generate
+        run: >
+          cmake -S ${{matrix.SRC_DIR}} -B ${{matrix.BUILD_DIR}}
+          -DPYTHON_VERSION="${{ github.event.inputs.py_version }}"
+          -DCMAKE_INSTALL_PREFIX:PATH=${{matrix.INSTALL_DIR}}
+          -DBUILD_LIBPYTHON_SHARED:BOOL=YES -GNinja
+
+      - name: build
+        run: cmake --build ${{matrix.BUILD_DIR}}
+
+      - name: install
+        run: cmake --install ${{matrix.BUILD_DIR}}
+
+      - name: test
+        run: ${{matrix.INSTALL_DIR}}/bin/python -m test
