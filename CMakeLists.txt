@@ -112,7 +112,7 @@ cmake_dependent_option(USE_SYSTEM_TCL "Use system TCL" ON "USE_SYSTEM_LIBRARIES"
 cmake_dependent_option(USE_SYSTEM_ZLIB "Use system ZLIB" ${_use_system_zlib_default} "USE_SYSTEM_LIBRARIES" OFF)
 cmake_dependent_option(USE_SYSTEM_GDBM "Use system GDBM" ON "USE_SYSTEM_LIBRARIES" OFF)
 cmake_dependent_option(USE_SYSTEM_READLINE "Use system READLINE" ON "USE_SYSTEM_LIBRARIES" OFF)
-cmake_dependent_option(USE_SYSTEM_SQLITE3 "Use system SQLITE3" ON "USE_SYSTEM_LIBRARIES" OFF)
+cmake_dependent_option(USE_SYSTEM_SQLite3 "Use system SQLITE3" ON "USE_SYSTEM_LIBRARIES" OFF)
 if(IS_PY3)
   cmake_dependent_option(USE_SYSTEM_LIBMPDEC "Use system LIBMPDEC" ON "USE_SYSTEM_LIBRARIES" OFF)
 endif()
@@ -163,7 +163,6 @@ if(NOT (SRC_DIR AND EXISTS ${SRC_DIR}/${_landmark}))
         endif()
     endforeach()
 endif()
-get_filename_component(SRC_DIR "${SRC_DIR}" ABSOLUTE)
 
 # Download sources
 get_filename_component(_parent_dir ${CMAKE_CURRENT_BINARY_DIR} PATH)
@@ -303,6 +302,7 @@ if(NOT EXISTS ${SRC_DIR}/${_landmark} AND DOWNLOAD_SOURCES)
     set(SRC_DIR ${CMAKE_CURRENT_BINARY_DIR}/../${_extracted_dir})
 endif()
 
+get_filename_component(SRC_DIR "${SRC_DIR}" ABSOLUTE)
 if(NOT EXISTS ${SRC_DIR}/${_landmark})
     message(FATAL_ERROR "Failed to locate python source.
 The searched locations were:
